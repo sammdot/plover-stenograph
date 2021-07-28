@@ -3,6 +3,7 @@ from plover.machine.base import ThreadedStenotypeBase
 
 from stenograph import *
 
+
 class StenographMachine(ThreadedStenotypeBase):
 
     KEYS_LAYOUT = """
@@ -51,7 +52,6 @@ class StenographMachine(ThreadedStenotypeBase):
                 log.debug("Stenograph writer exception: %s" % e)
                 self._error()
             else:
-                self._ready()
                 break
 
     def _send_receive(self, request):
@@ -74,6 +74,10 @@ class StenographMachine(ThreadedStenotypeBase):
 
         state = ReadState()
 
+        # Tracks whether the machine *just* disconnected, or has been disconnected
+        # for a while, to prevent showing the warning more times than needed.
+        disconnected = False
+
         while not self.finished.isSet():
             try:
                 if not state.realtime_file_open:
@@ -84,7 +88,9 @@ class StenographMachine(ThreadedStenotypeBase):
                     StenoPacket.make_read_request(file_offset=state.offset)
                 )
             except ConnectionError as e:
-                log.warning("Stenograph writer disconnected, attempting to reconnect")
+                if not disconnected:
+                    log.warning("Stenograph writer disconnected, attempting to reconnect")
+                    disconnected = True
                 log.debug("Stenograph writer exception: %s", e)
                 # User could start a new file while disconnected.
                 state.reset()
@@ -96,6 +102,10 @@ class StenographMachine(ThreadedStenotypeBase):
                 # File closed! Open the realtime file.
                 state.reset()
             else:
+                if disconnected:
+                    log.warning("Stenograph writer reconnected")
+                    self._ready()
+                    disconnected = False
                 if response.data_length:
                     state.offset += response.data_length
                 elif not state.realtime:

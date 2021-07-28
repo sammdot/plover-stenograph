@@ -4,7 +4,7 @@ import uuid
 
 from stenograph.transport import MachineTransport
 from stenograph.packet import MAX_READ, StenoPacket
-from stenograph.exception import ProtocolViolationException, ConnectionError, TransportError
+from stenograph.exception import ProtocolViolationException, ConnectionError, ConnectionError
 
 GUID = wintypes.BYTE * 16
 HDEVINFO = wintypes.HANDLE
@@ -146,7 +146,7 @@ class WindowsUsbTransport(MachineTransport):
             0, ctypes.byref(dev_interface_data)
         ):
             if ctypes.GetLastError() != ERROR_NO_MORE_ITEMS:
-                raise ConnectionError('SetupDiEnumDeviceInterfaces: %s', ctypes.WinError())
+                raise ConnectionError('SetupDiEnumDeviceInterfaces: %s' % ctypes.WinError())
             return INVALID_HANDLE_VALUE
 
         request_length = wintypes.DWORD(0)
@@ -159,7 +159,7 @@ class WindowsUsbTransport(MachineTransport):
             None,
         )
         if status or ctypes.GetLastError() != ERROR_INSUFFICIENT_BUFFER:
-            raise ConnectionError('last error not insufficient buffer: %s', ctypes.WinError())
+            raise ConnectionError('last error not insufficient buffer: %s' % ctypes.WinError())
 
         dev_detail_data_buffer = ctypes.create_string_buffer(request_length.value)
         dev_detail_data_ptr = ctypes.cast(dev_detail_data_buffer, PSP_DEVICE_INTERFACE_DETAIL_DATA_A)
@@ -174,7 +174,7 @@ class WindowsUsbTransport(MachineTransport):
             None,
             None,
         ):
-            raise ConnectionError('SetupDiGetDeviceInterfaceDetail: %s', ctypes.WinError())
+            raise ConnectionError('SetupDiGetDeviceInterfaceDetail: %s' % ctypes.WinError())
 
         device_path = dev_detail_data_ptr[0].DevicePath
 
@@ -186,7 +186,7 @@ class WindowsUsbTransport(MachineTransport):
                             FILE_ATTRIBUTE_NORMAL,
                             None)
         if handle == INVALID_HANDLE_VALUE:
-            raise ConnectionError('CreateFile: %s', ctypes.WinError())
+            raise ConnectionError('CreateFile: %s' % ctypes.WinError())
         return handle
 
     @staticmethod
@@ -194,10 +194,10 @@ class WindowsUsbTransport(MachineTransport):
         device_info = SetupDiGetClassDevs(ctypes.byref(class_guid), None, None,
                                           DIGCF_DEVICEINTERFACE | DIGCF_PRESENT)
         if device_info == INVALID_HANDLE_VALUE:
-            raise ConnectionError('SetupDiGetClassDevs: %s', ctypes.WinError())
+            raise ConnectionError('SetupDiGetClassDevs: %s' % ctypes.WinError())
         usb_device = WindowsUsbTransport._open_device_instance(device_info, class_guid)
         if not SetupDiDestroyDeviceInfoList(device_info):
-            raise ConnectionError('SetupDiDestroyDeviceInfoList: %s', ctypes.WinError())
+            raise ConnectionError('SetupDiDestroyDeviceInfoList: %s' % ctypes.WinError())
         return usb_device
 
     def _usb_write_packet(self, request):
@@ -208,7 +208,7 @@ class WindowsUsbTransport(MachineTransport):
                          StenoPacket.HEADER_SIZE + request.data_length,
                          ctypes.byref(bytes_written),
                          None):
-            raise TransportError('WriteFile: %s', ctypes.WinError())
+            raise ConnectionError('WriteFile: %s' % ctypes.WinError())
         return bytes_written.value
 
     def _usb_read_packet(self):
@@ -218,9 +218,9 @@ class WindowsUsbTransport(MachineTransport):
                         MAX_READ + StenoPacket.HEADER_SIZE,
                         ctypes.byref(bytes_read),
                         None):
-            raise TransportError('ReadFile: %s', ctypes.WinError())
+            raise ConnectionError('ReadFile: %s' % ctypes.WinError())
         if bytes_read.value < StenoPacket.HEADER_SIZE:
-            raise TransportError('ReadFile: short read, %u < %u',
+            raise ConnectionError('ReadFile: short read, %u < %u',
                       bytes_read.value, StenoPacket.HEADER_SIZE)
         writer_packet = StenoPacket.unpack(self._read_buffer)
         return writer_packet
@@ -228,7 +228,7 @@ class WindowsUsbTransport(MachineTransport):
     def disconnect(self):
         self._usb_device = INVALID_HANDLE_VALUE
         if not CloseHandle(self._usb_device):
-            raise ConnectionError('CloseHandle: %s', ctypes.WinError())
+            raise ConnectionError('CloseHandle: %s' % ctypes.WinError())
 
     def connect(self):
         # If already connected, disconnect first.
@@ -238,10 +238,11 @@ class WindowsUsbTransport(MachineTransport):
         return self._usb_device != INVALID_HANDLE_VALUE
 
     def send_receive(self, request):
-        assert self._usb_device != INVALID_HANDLE_VALUE, 'device not open'
+        if self._usb_device == INVALID_HANDLE_VALUE:
+            raise ConnectionError("USB device is not open")
         written = self._usb_write_packet(request)
         if written < StenoPacket.HEADER_SIZE:
-            raise TransportError("Could not write to USB device")
+            raise ConnectionError("Could not write to USB device")
         writer_packet = self._usb_read_packet()
         if (writer_packet.sequence_number == request.sequence_number and
             writer_packet.packet_type == request.packet_type):
