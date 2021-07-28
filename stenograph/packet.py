@@ -3,7 +3,7 @@ from struct import Struct, calcsize, pack, unpack
 from more_itertools import grouper
 from itertools import compress
 
-from stenograph.stroke import STENO_KEY_CHART
+from stenograph.stroke import Stroke
 
 MAX_READ = 0x200  # Arbitrary read limit
 
@@ -137,15 +137,7 @@ class StenoPacket:
         # Steno should only be present on ACTION_READ packets
         assert self.packet_type == PacketType.READ_FILE
 
-        strokes = []
-        for stroke_data in grouper(8, self.data, 0):
-            stroke = []
-            # Get 4 bytes of steno, ignore timestamp.
-            for steno_byte, key_chart_row in zip(stroke_data, STENO_KEY_CHART):
-                assert steno_byte >= 0b11000000
-                # Only interested in right 6 values
-                key_mask = [int(i) for i in bin(steno_byte)[-6:]]
-                stroke.extend(compress(key_chart_row, key_mask))
-            if stroke:
-                strokes.append(stroke)
-        return strokes
+        return [
+            Stroke.unpack(stroke_data)
+            for stroke_data in grouper(8, self.data, 0)
+        ]

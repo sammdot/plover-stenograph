@@ -227,7 +227,7 @@ class Stenograph(ThreadedStenotypeBase):
                     state.realtime = True
                 if response.data_length and state.realtime:
                     for stroke in response.strokes():
-                        self._on_stroke(stroke)
+                        self._on_stroke(stroke.keys)
 
         self._machine.disconnect()
 
