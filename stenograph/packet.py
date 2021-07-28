@@ -1,7 +1,8 @@
 from struct import Struct, calcsize, pack, unpack
 from more_itertools import grouper
+from itertools import compress
 
-from stenograph.stroke import STENO_KEY_ORDER
+from stenograph.stroke import STENO_KEY_CHART
 
 MAX_READ = 0x200  # Arbitrary read limit
 
