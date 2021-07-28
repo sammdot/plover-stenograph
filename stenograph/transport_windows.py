@@ -4,7 +4,7 @@ import uuid
 
 from stenograph.transport import MachineTransport
 from stenograph.packet import MAX_READ, StenoPacket
-from stenograph.exception import ConnectionError, TransportError
+from stenograph.exception import ProtocolViolationException, ConnectionError, TransportError
 
 GUID = wintypes.BYTE * 16
 HDEVINFO = wintypes.HANDLE

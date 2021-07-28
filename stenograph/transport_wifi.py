@@ -3,7 +3,7 @@ import socket
 
 from stenograph.transport import MachineTransport
 from stenograph.packet import MAX_READ, StenoPacket
-from stenograph.exception import ConnectionError
+from stenograph.exception import ProtocolViolationException, ConnectionError
 
 
 # For UDP broadcast. Stenograph machines listen on port 5012 for opening packet.

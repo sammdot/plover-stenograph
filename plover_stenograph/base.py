@@ -45,7 +45,6 @@ class StenographMachine(ThreadedStenotypeBase):
                 self._initializing()
                 self._transport.connect()
             except Exception as e:
-                log.error("Could not reconnect to Stenograph writer")
                 log.debug("Stenograph writer exception: %s" % e)
                 self._error()
             else:
@@ -86,9 +85,7 @@ class StenographMachine(ThreadedStenotypeBase):
                 log.debug("Stenograph writer exception: %s", e)
                 # User could start a new file while disconnected.
                 state.reset()
-                if self._reconnect():
-                    log.warning("Stenograph writer reconnected.")
-                    self._ready()
+                self._reconnect()
             except NoRealtimeFileException:
                 # User hasn"t started writing, just keep opening the realtime file
                 state.reset()

@@ -2,7 +2,7 @@ from usb import core, util
 
 from stenograph.transport import MachineTransport
 from stenograph.packet import MAX_READ, StenoPacket
-from stenograph.exception import ConnectionError
+from stenograph.exception import ProtocolViolationException, ConnectionError
 
 
 VENDOR_ID = 0x112b
