@@ -2,6 +2,7 @@ from usb import core, util
 
 from stenograph.transport import MachineTransport
 from stenograph.packet import MAX_READ, StenoPacket
+from stenograph.exception import ConnectionError
 
 
 VENDOR_ID = 0x112b
@@ -25,7 +26,7 @@ class LibusbTransport(MachineTransport):
         # Find the device by the vendor ID.
         usb_device = core.find(idVendor=VENDOR_ID)
         if not usb_device:  # Device not found
-            return self._connected
+            raise ConnectionError("USB device not connected")
 
         # Copy the default configuration.
         usb_device.set_configuration()
@@ -54,11 +55,11 @@ class LibusbTransport(MachineTransport):
         self._endpoint_in = endpoint_in
         self._endpoint_out = endpoint_out
         self._connected = True
-        return self._connected
 
     def disconnect(self):
         self._connected = False
-        util.dispose_resources(self._usb_device)
+        if self._usb_device:
+            util.dispose_resources(self._usb_device)
         self._usb_device = None
         self._endpoint_in = None
         self._endpoint_out = None
@@ -69,12 +70,13 @@ class LibusbTransport(MachineTransport):
             self._endpoint_out.write(request.pack())
             response = self._endpoint_in.read(
                 MAX_READ + StenoPacket.HEADER_SIZE, 3000)
-        except core.USBError:
-            return None
+        except Exception as e:
+            raise ConnectionError(e)
         else:
             if response and len(response) >= StenoPacket.HEADER_SIZE:
                 writer_packet = StenoPacket.unpack(response)
-                # Ignore data if sequence numbers don't match.
-                if writer_packet.sequence_number == request.sequence_number:
-                    return writer_packet
-            return None
+                if (writer_packet.sequence_number == request.sequence_number and
+                    writer_packet.packet_type == request.packet_type):
+                    return self.handle_response(writer_packet)
+                raise ProtocolViolationException()
+            raise ConnectionError("No response from writer")

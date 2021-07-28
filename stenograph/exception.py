@@ -1,3 +1,13 @@
+class ConnectionError(Exception):
+    """We could not connect to the writer."""
+    pass
+
+
+class TransportError(Exception):
+    """We could not read from or write to the writer"""
+    pass
+
+
 class ProtocolViolationException(Exception):
     """The writer did something unexpected"""
     pass

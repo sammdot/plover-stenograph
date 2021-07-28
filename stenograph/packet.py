@@ -14,6 +14,13 @@ class PacketType(IntEnum):
     READ_FILE = 0x13
 
 
+class ErrorType(IntEnum):
+    UNABLE_TO_PERFORM = 3
+    FILE_NOT_AVAILABLE = 7
+    NO_REALTIME_FILE = 8
+    FINISHED_READING_CLOSED_FILE = 9
+
+
 class StenoPacket:
     """
     Stenograph StenoPacket helper

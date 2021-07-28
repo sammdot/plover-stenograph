@@ -1,2 +1,2 @@
-from .usb import Stenograph as StenographUsb
-from .wifi import Stenograph as StenographWiFi
+from .usb import StenographUsb
+from .wifi import StenographWiFi
