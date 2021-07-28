@@ -404,7 +404,7 @@ class Stenograph(ThreadedStenotypeBase):
         if response is None:
             """No response implies device connection issue."""
             raise IOError()
-        elif response.packet_id == StenoPacket.ID_ERROR:
+        elif response.is_error:
             """Writer may reply with an error packet"""
             error_number = response.p1
             if error_number == 3:
@@ -417,7 +417,7 @@ class Stenograph(ThreadedStenotypeBase):
                 raise FinishedReadingClosedFileException()
         else:
             """Writer has returned a packet"""
-            if (response.packet_id != request.packet_id
+            if (response.packet_type != request.packet_type
                     or response.sequence_number != request.sequence_number):
                 raise ProtocolViolationException()
             return response
