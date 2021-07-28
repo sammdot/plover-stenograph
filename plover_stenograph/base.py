@@ -34,6 +34,9 @@ class StenographMachine(ThreadedStenotypeBase):
         except IOError as e:
             log.error("Lost connection to Stenograph writer: %s" % e)
             self._error()
+        except Exception as e:
+            log.error("Error connecting to Stenograph writer: %s" % e)
+            self._error()
         else:
             self._ready()
             self.start()
@@ -81,7 +84,7 @@ class StenographMachine(ThreadedStenotypeBase):
                     StenoPacket.make_read_request(file_offset=state.offset)
                 )
             except ConnectionError as e:
-                log.warning("Stenograph writer disconnected, reconnecting...")
+                log.warning("Stenograph writer disconnected, attempting to reconnect")
                 log.debug("Stenograph writer exception: %s", e)
                 # User could start a new file while disconnected.
                 state.reset()

@@ -178,8 +178,6 @@ class WindowsUsbTransport(MachineTransport):
 
         device_path = dev_detail_data_ptr[0].DevicePath
 
-        raise ConnectionError('okay, creating file, device path: %s', device_path)
-
         handle = CreateFile(device_path,
                             GENERIC_READ | GENERIC_WRITE,
                             FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -197,7 +195,7 @@ class WindowsUsbTransport(MachineTransport):
                                           DIGCF_DEVICEINTERFACE | DIGCF_PRESENT)
         if device_info == INVALID_HANDLE_VALUE:
             raise ConnectionError('SetupDiGetClassDevs: %s', ctypes.WinError())
-        usb_device = StenographMachine._open_device_instance(device_info, class_guid)
+        usb_device = WindowsUsbTransport._open_device_instance(device_info, class_guid)
         if not SetupDiDestroyDeviceInfoList(device_info):
             raise ConnectionError('SetupDiDestroyDeviceInfoList: %s', ctypes.WinError())
         return usb_device
