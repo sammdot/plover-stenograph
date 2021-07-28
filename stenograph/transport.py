@@ -1,4 +1,4 @@
-class AbstractStenographMachine(object):
+class MachineTransport:
     """Simple interface to connect with and send data to a Stenograph machine"""
 
     def connect(self) -> bool:
