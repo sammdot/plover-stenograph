@@ -90,7 +90,8 @@ class WiFiTransport(MachineTransport):
             if response and len(response) >= StenoPacket.HEADER_SIZE:
                 writer_packet = StenoPacket.unpack(response)
                 if (writer_packet.sequence_number == request.sequence_number and
-                    writer_packet.packet_type == request.packet_type):
+                    (writer_packet.packet_type == request.packet_type or
+                        writer_packet.is_error or writer_packet.is_ok)):
                     return self.handle_response(writer_packet)
                 raise ProtocolViolationException()
             raise ConnectionError("No response from writer")

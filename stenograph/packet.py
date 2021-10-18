@@ -136,6 +136,10 @@ class StenoPacket:
     def is_error(self):
         return self.packet_type == PacketType.ERROR
 
+    @property
+    def is_ok(self):
+        return self.packet_type == PacketType.OK
+
     def strokes(self):
         """Get list of strokes represented in this packet's data"""
 
