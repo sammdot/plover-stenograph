@@ -2,6 +2,7 @@ from plover import log
 from plover.machine.base import ThreadedStenotypeBase
 
 from stenograph import *
+from time import sleep
 
 
 class StenographMachine(ThreadedStenotypeBase):
