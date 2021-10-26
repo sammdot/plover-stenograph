@@ -1,4 +1,5 @@
 from usb import core, util
+from pyusb_libusb1_backend import get_pyusb_backend
 
 from stenograph.transport import MachineTransport
 from stenograph.packet import MAX_READ, StenoPacket
@@ -16,6 +17,7 @@ class LibusbTransport(MachineTransport):
         self._endpoint_in = None
         self._endpoint_out = None
         self._connected = False
+        self._backend = get_pyusb_backend()
 
     def connect(self):
         """Attempt to and return connection"""
@@ -24,7 +26,7 @@ class LibusbTransport(MachineTransport):
             self.disconnect()
 
         # Find the device by the vendor ID.
-        usb_device = core.find(idVendor=VENDOR_ID)
+        usb_device = core.find(backend=self._backend, idVendor=VENDOR_ID)
         if not usb_device:  # Device not found
             raise ConnectionError("USB device not connected")
 
