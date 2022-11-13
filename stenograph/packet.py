@@ -150,5 +150,5 @@ class StenoPacket:
 
         return [
             Stroke.unpack(stroke_data)
-            for stroke_data in grouper(8, self.data, 0)
+            for stroke_data in grouper(self.data, 8, fillvalue=0)
         ]
