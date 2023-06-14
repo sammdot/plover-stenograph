@@ -40,7 +40,7 @@ class StenographMachine(ThreadedStenotypeBase):
             log.error("Error connecting to Stenograph writer: %s" % e)
             self._error()
         else:
-            self._ready()
+            # self._ready()
             self.start()
 
     def _reconnect(self):
@@ -110,6 +110,7 @@ class StenographMachine(ThreadedStenotypeBase):
                 if response.data_length:
                     state.offset += response.data_length
                 elif not state.realtime:
+                    self._ready()
                     state.realtime = True
                 if response.data_length and state.realtime:
                     for stroke in response.strokes():
